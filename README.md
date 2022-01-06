@@ -40,7 +40,7 @@ As seguintes ferramentas foram usadas na construção do projeto:
 ![city](https://user-images.githubusercontent.com/79946685/148424751-15695b5e-11e7-4950-bc10-074ae4d210f8.png)
 
 ```Java
-@Test
+	@Test
 	public void findAllShouldReturnAllResourcesSortedByName() throws Exception {
 		
 		ResultActions result =
@@ -105,7 +105,7 @@ As seguintes ferramentas foram usadas na construção do projeto:
 		result.andExpect(status().isBadRequest());
 	}
  
- @Test
+ 	@Test
 	public void updateShouldUpdateResourceWhenIdExists() throws Exception {
 
 		long existingId = 1L;
