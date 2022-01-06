@@ -37,98 +37,117 @@ As seguintes ferramentas foram usadas na construção do projeto:
 
 ### 🎲 O desafio consiste em Construir API  do modelo abaixo para passar os testes a seguir
 
-<img src= "img/modelo.png" />
+![city](https://user-images.githubusercontent.com/79946685/148424751-15695b5e-11e7-4950-bc10-074ae4d210f8.png)
 
 ```Java
 @Test
-public void deleteShouldReturnBadRequestWhenDependentId()throws Exception{
+	public void findAllShouldReturnAllResourcesSortedByName() throws Exception {
+		
+		ResultActions result =
+				mockMvc.perform(get("/cities")
+					.contentType(MediaType.APPLICATION_JSON));
 
-    Long dependentId=1L;
+		result.andExpect(status().isOk());
+		result.andExpect(jsonPath("$[0].name").value("Belo Horizonte"));
+		result.andExpect(jsonPath("$[1].name").value("Belém"));
+		result.andExpect(jsonPath("$[2].name").value("Brasília"));
+	}
+	
+	@Test
+	public void insertShouldInsertResource() throws Exception {
 
-    ResultActions result=
-    mockMvc.perform(delete("/cities/{id}",dependentId));
+		CityDTO dto = new CityDTO(null, "Recife");
+		String jsonBody = objectMapper.writeValueAsString(dto);
+		
+		ResultActions result =
+				mockMvc.perform(post("/cities")
+					.content(jsonBody)
+					.contentType(MediaType.APPLICATION_JSON)
+					.accept(MediaType.APPLICATION_JSON));
+		
+		result.andExpect(status().isCreated());
+		result.andExpect(jsonPath("$.id").exists());
+		result.andExpect(jsonPath("$.name").value("Recife"));
+	}
 
-    result.andExpect(status().isBadRequest());
-    }
+	@Test
+	public void deleteShouldReturnNoContentWhenIndependentId() throws Exception {		
+		
+		Long independentId = 5L;
+		
+		ResultActions result =
+				mockMvc.perform(delete("/cities/{id}", independentId));
+		
+		
+		result.andExpect(status().isNoContent());
+	}
 
-@Test
-public void deleteShouldReturnNoContentWhenIndependentId()throws Exception{
+	@Test
+	public void deleteShouldReturnNotFoundWhenNonExistingId() throws Exception {		
 
-    Long independentId=5L;
+		Long nonExistingId = 50L;
+		
+		ResultActions result =
+				mockMvc.perform(delete("/cities/{id}", nonExistingId));
 
-    ResultActions result=
-    mockMvc.perform(delete("/cities/{id}",independentId));
+		result.andExpect(status().isNotFound());
+	}
 
+	@Test
+	@Transactional(propagation = Propagation.NEVER) 
+	public void deleteShouldReturnBadRequestWhenDependentId() throws Exception {		
 
-    result.andExpect(status().isNoContent());
-    }
+		Long dependentId = 1L;
+		
+		ResultActions result =
+				mockMvc.perform(delete("/cities/{id}", dependentId));
+				
+		result.andExpect(status().isBadRequest());
+	}
+ 
+ @Test
+	public void updateShouldUpdateResourceWhenIdExists() throws Exception {
 
-@Test
-public void deleteShouldReturnNotFoundWhenNonExistingId()throws Exception{
+		long existingId = 1L;
+		
+		EventDTO dto = new EventDTO(null, "Expo XP", LocalDate.of(2021, 5, 18), "https://expoxp.com.br", 7L);
+		String jsonBody = objectMapper.writeValueAsString(dto);
+		
+		ResultActions result =
+				mockMvc.perform(put("/events/{id}", existingId)
+					.content(jsonBody)
+					.contentType(MediaType.APPLICATION_JSON)
+					.accept(MediaType.APPLICATION_JSON));
+		
+		result.andExpect(status().isOk());
+		result.andExpect(jsonPath("$.id").exists());
+		result.andExpect(jsonPath("$.id").value(1L));		
+		result.andExpect(jsonPath("$.name").value("Expo XP"));
+		result.andExpect(jsonPath("$.date").value("2021-05-18"));
+		result.andExpect(jsonPath("$.url").value("https://expoxp.com.br"));
+		result.andExpect(jsonPath("$.cityId").value(7L));
+	}
 
-    Long nonExistingId=50L;
+	@Test
+	public void updateShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
-    ResultActions result=
-    mockMvc.perform(delete("/cities/{id}",nonExistingId));
-
-    result.andExpect(status().isNotFound());
-    }
-
-@Test
-public void findAllShouldReturnAllResourcesSortedByName()throws Exception{
-
-    ResultActions result=
-    mockMvc.perform(get("/cities")
-    .contentType(MediaType.APPLICATION_JSON));
-
-    result.andExpect(status().isOk());
-    result.andExpect(jsonPath("$[0].name").value("Belo Horizonte"));
-    result.andExpect(jsonPath("$[1].name").value("Belém"));
-    result.andExpect(jsonPath("$[2].name").value("Brasília"));
-    }
-
-@Test
-public void updateShouldUpdateResourceWhenIdExists()throws Exception{
-
-    long existingId=1L;
-
-    EventDTO dto=new EventDTO(null,"Expo XP",LocalDate.of(2021,5,18),"https://expoxp.com.br",7L);
-    String jsonBody=objectMapper.writeValueAsString(dto);
-
-    ResultActions result=
-    mockMvc.perform(put("/events/{id}",existingId)
-    .content(jsonBody)
-    .contentType(MediaType.APPLICATION_JSON)
-    .accept(MediaType.APPLICATION_JSON));
-
-    result.andExpect(status().isOk());
-    result.andExpect(jsonPath("$.id").exists());
-    result.andExpect(jsonPath("$.id").value(1L));
-    result.andExpect(jsonPath("$.name").value("Expo XP"));
-    result.andExpect(jsonPath("$.date").value("2021-05-18"));
-    result.andExpect(jsonPath("$.url").value("https://expoxp.com.br"));
-    result.andExpect(jsonPath("$.cityId").value(7L));
-    }
-
-@Test
-public void updateShouldReturnNotFoundWhenIdDoesNotExist()throws Exception{
-
-    long nonExistingId=1000L;
-
-    EventDTO dto=new EventDTO(null,"Expo XP",LocalDate.of(2021,5,18),"https://expoxp.com.br",7L);
-    String jsonBody=objectMapper.writeValueAsString(dto);
-
-    ResultActions result=
-    mockMvc.perform(put("/events/{id}",nonExistingId)
-    .content(jsonBody)
-    .contentType(MediaType.APPLICATION_JSON)
-    .accept(MediaType.APPLICATION_JSON));
-
-    result.andExpect(status().isNotFound());
-    }
+		long nonExistingId = 1000L;
+		
+		EventDTO dto = new EventDTO(null, "Expo XP", LocalDate.of(2021, 5, 18), "https://expoxp.com.br", 7L);
+		String jsonBody = objectMapper.writeValueAsString(dto);
+		
+		ResultActions result =
+				mockMvc.perform(put("/events/{id}", nonExistingId)
+					.content(jsonBody)
+					.contentType(MediaType.APPLICATION_JSON)
+					.accept(MediaType.APPLICATION_JSON));
+		
+		result.andExpect(status().isNotFound());
+	}
 
 ```
 
 ### Resultado dos Testes
 
-<img src= "img/TestPassed.png" />
+![img](https://user-images.githubusercontent.com/79946685/148427099-9203f2af-ce88-4117-9610-15bc1cfe6e59.png)
+
